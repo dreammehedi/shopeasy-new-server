@@ -101,6 +101,28 @@ async function run() {
       }
     });
 
+    // get all category name in all products
+    app.get("/api/all-category", async (req, res) => {
+      try {
+        // get all brand names
+        const allCategoryNames = await allProductsBrandCategoryNameFound(
+          "categoryName"
+        );
+
+        // send the response client side
+        res.status(200).send({
+          success: true,
+          message: "All category names found.",
+          payload: allCategoryNames,
+        });
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).send({
+          success: false,
+          message: "Internal Server Error!",
+        });
+      }
+    });
     await client.db("easyshop").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
