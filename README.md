@@ -30,7 +30,7 @@ This is the backend service for a Fullstack E-commerce Website built using the M
 
 1. Clone the repository:
    ```bash
-   git clone <https://github.com/dreammehedi/shopease-server>
+   git clone <https://github.com/dreammehedi/shopease-new-server>
    ```
 2. Install dependencies:
    ```bash
