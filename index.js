@@ -4,8 +4,12 @@ const port = process.env.PORT || 5000;
 require("dotenv").config();
 const morgan = require("morgan");
 const apiLimit = require("express-rate-limit");
+const limitApi = apiLimit({
+  windowMs: 50 * 60 * 1000, // 50 minutes
+  max: 500,
+  message: "Too many requests from this IP, please try again later!",
+});
 const { MongoClient, ServerApiVersion } = require("mongodb");
-
 const app = express();
 
 // Middleware
@@ -20,13 +24,7 @@ app.use(
 );
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(
-  apiLimit({
-    windowMs: 30 * 60 * 1000, // 30 minutes
-    max: 100,
-    message: "Too many requests from this IP, please try again later!",
-  })
-);
+app.use(limitApi);
 
 // Database connection
 const uri = process.env.MONGODB_URI;
@@ -48,13 +46,25 @@ async function run() {
     // get all products
     app.get("/api/products", async (req, res) => {
       try {
+        const queryData = req.query;
+        // active page
+        const currentPage = Number(queryData.activePage) || 1;
+
         // get all products
-        const getProducts = await allProducts.find().toArray();
+        const getProducts = await allProducts
+          .find()
+          .skip((currentPage - 1) * 9)
+          .limit(9)
+          .toArray();
+
+        // allProductsCount
+        const allProductsCount = await allProducts.estimatedDocumentCount();
 
         // send the response client side
         res.status(200).send({
           success: true,
           message: "All products found.",
+          allProductsCount,
           payload: getProducts,
         });
       } catch (error) {
