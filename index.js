@@ -40,7 +40,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const database = client.db("shopeasy");
     const allProducts = database.collection("allproducts");
@@ -65,6 +65,7 @@ async function run() {
         });
       }
     });
+
     // unique name find
     const allProductsBrandCategoryNameFound = async (name) => {
       // get all products
@@ -123,7 +124,8 @@ async function run() {
         });
       }
     });
-    await client.db("easyshop").command({ ping: 1 });
+
+    // await client.db("easyshop").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
