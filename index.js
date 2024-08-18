@@ -47,18 +47,42 @@ async function run() {
     app.get("/api/products", async (req, res) => {
       try {
         const queryData = req.query;
+
         // active page
         const currentPage = Number(queryData.activePage) || 1;
 
-        // get all products
+        // search products
+        const searchProduct = queryData.searchProduct || "";
+
+        // sorted by
+        const sortedBy = queryData.sortedBy || "";
+
+        // filter data
+        const filter = searchProduct
+          ? {
+              productName: { $regex: searchProduct, $options: "i" },
+            }
+          : {};
+
+        // sorted data
+        let sortedCriteria = {};
+        if (sortedBy === "priceAsc") {
+          sortedCriteria = { price: 1 };
+        } else if (sortedBy === "priceDesc") {
+          sortedCriteria = { price: -1 };
+        } else if (sortedBy === "dateAdded") {
+          sortedCriteria = { createdAt: -1 };
+        }
+        // get the filtered product count
+        const allProductsCount = await allProducts.countDocuments(filter);
+
+        // get the filtered products with pagination
         const getProducts = await allProducts
-          .find()
+          .find(filter)
           .skip((currentPage - 1) * 9)
+          .sort(sortedCriteria)
           .limit(9)
           .toArray();
-
-        // allProductsCount
-        const allProductsCount = await allProducts.estimatedDocumentCount();
 
         // send the response client side
         res.status(200).send({
