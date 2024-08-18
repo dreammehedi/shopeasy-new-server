@@ -3,12 +3,12 @@ const cors = require("cors");
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 const morgan = require("morgan");
-const apiLimit = require("express-rate-limit");
-const limitApi = apiLimit({
-  windowMs: 50 * 60 * 1000, // 50 minutes
-  max: 500,
-  message: "Too many requests from this IP, please try again later!",
-});
+// const apiLimit = require("express-rate-limit");
+// const limitApi = apiLimit({
+//   windowMs: 50 * 60 * 1000, // 50 minutes
+//   max: 500,
+//   message: "Too many requests from this IP, please try again later!",
+// });
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 
@@ -24,7 +24,7 @@ app.use(
 );
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(limitApi);
+// app.use(limitApi);
 
 // Database connection
 const uri = process.env.MONGODB_URI;
@@ -44,9 +44,9 @@ async function run() {
     const allProducts = database.collection("allproducts");
 
     // get all products
-    app.get("/api/products", async (req, res) => {
+    app.post("/api/products", async (req, res) => {
       try {
-        const queryData = req.query;
+        const queryData = req.body;
 
         // active page
         const currentPage = Number(queryData.activePage) || 1;
@@ -57,12 +57,35 @@ async function run() {
         // sorted by
         const sortedBy = queryData.sortedBy || "";
 
+        // filter data get query
+        const filterData = queryData?.filter || {};
+
+        const brand = filterData?.brand || "";
+        const category = filterData?.category || "";
+        const minPrice = filterData?.minPrice || "";
+        const maxPrice = filterData?.maxPrice || "";
+
         // filter data
-        const filter = searchProduct
-          ? {
-              productName: { $regex: searchProduct, $options: "i" },
-            }
-          : {};
+        let filter = {};
+
+        if (searchProduct) {
+          filter.productName = { $regex: searchProduct, $options: "i" };
+        }
+
+        if (brand) {
+          filter.brandName = brand;
+        }
+        if (category) {
+          filter.categoryName = category;
+        }
+
+        if (minPrice && maxPrice) {
+          filter.price = { $gte: Number(minPrice), $lte: Number(maxPrice) };
+        } else if (minPrice) {
+          filter.price = { $gte: Number(minPrice) };
+        } else if (maxPrice) {
+          filter.price = { $lte: Number(maxPrice) };
+        }
 
         // sorted data
         let sortedCriteria = {};
@@ -161,7 +184,7 @@ async function run() {
 
     // await client.db("easyshop").command({ ping: 1 });
     console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
+      "Pinged your deployment. You successfully connected to MongoDB."
     );
   } finally {
     // Uncomment the line below to close the connection after the server shuts down.
