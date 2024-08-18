@@ -45,6 +45,27 @@ async function run() {
     const database = client.db("shopeasy");
     const allProducts = database.collection("allproducts");
 
+    // get all products
+    app.get("/api/products", async (req, res) => {
+      try {
+        // get all products
+        const getProducts = await allProducts.find().toArray();
+
+        // send the response client side
+        res.status(200).send({
+          success: true,
+          message: "All products found.",
+          payload: getProducts,
+        });
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).send({
+          success: false,
+          message: "Internal Server Error!",
+        });
+      }
+    });
+
     await client.db("easyshop").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
