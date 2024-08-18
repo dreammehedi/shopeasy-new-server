@@ -65,6 +65,41 @@ async function run() {
         });
       }
     });
+    // unique name find
+    const allProductsBrandCategoryNameFound = async (name) => {
+      // get all products
+      const getAllProducts = await allProducts.find().toArray();
+
+      // get all names
+      const names = getAllProducts.map((product) => product[name]);
+
+      // unique brand name
+      const uniqueNames = [...new Set(names)];
+      return uniqueNames;
+    };
+
+    // get all brand name in all products
+    app.get("/api/all-brand", async (req, res) => {
+      try {
+        // get all brand names
+        const allBrandNames = await allProductsBrandCategoryNameFound(
+          "brandName"
+        );
+
+        // send the response client side
+        res.status(200).send({
+          success: true,
+          message: "All brand names found.",
+          payload: allBrandNames,
+        });
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).send({
+          success: false,
+          message: "Internal Server Error!",
+        });
+      }
+    });
 
     await client.db("easyshop").command({ ping: 1 });
     console.log(
